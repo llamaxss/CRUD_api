@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div>
+    <h1>Login</h1>
+    <form id="auth-form">
+        <input type="text" name="username" placeholder="username" />
+        <input type="password" name="password" placeholder="password" />
+        <button type="button" id="login-btn">Login</button>
+        <button type="button" id="register-btn">Register</button>
+    </form>
+</div>
+
+<script>
+    const loginBtn = document.getElementById("login-btn");
+    const registerBtn = document.getElementById("register-btn");
+    const form = document.getElementById("auth-form");
+
+    function formAction(mode) {
+        if (mode === "login") {
+            form.action = "{{ url_for('login') }}";
+        } else if (mode === "register") {
+            form.action = "{{ url_for('register') }}";
+        }
+        form.method = 'post';
+        form.submit();
+    }
+
+    loginBtn.addEventListener("click", function () {
+        formAction("login");
+    });
+    registerBtn.addEventListener("click", function () {
+        formAction("register");
+    });
+
+</script>
+{% endblock %}
