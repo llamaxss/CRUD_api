@@ -2,12 +2,12 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from random import random
 
-from .models.blogs import BlogDb, BlogSchema
+from ..models.blogs import BlogDb, BlogSchema
 
 
 def add_blog(session: Session, blog: BlogSchema) -> BlogDb:
     blog_post = BlogDb(
-        id= random(),
+        id=random(),
         title=blog.title,
         content=blog.content,
         last_modified=blog.last_modified,
@@ -25,8 +25,10 @@ def edit_post_data(session: Session, id: str, blog: BlogSchema) -> BlogDb | None
     if post_data is None:
         return None
     else:
-        post_data.title = blog.title if blog.title is not None else post_data.title 
-        post_data.content = blog.content if blog.content is not None else post_data.content
+        post_data.title = blog.title if blog.title is not None else post_data.title
+        post_data.content = (
+            blog.content if blog.content is not None else post_data.content
+        )
         post_data.last_modified = datetime.now()
         session.commit()
         session.refresh(post_data)
@@ -56,9 +58,7 @@ def delete_post_data(session: Session, id: str) -> list[BlogDb]:
 def get_all_blog_data(session: Session) -> list[BlogDb]:
     return session.query(BlogDb).all()
 
-def delete_all_blog_data(session: Session) -> None:
-    try:
-        session.query(BlogDb).delete()
-        session.commit()
-    except Exception as e:
-        session.rollback()
+
+# def delete_all_blog_data(session: Session) -> None:
+#     session.query(BlogDb).delete()
+#     session.commit()

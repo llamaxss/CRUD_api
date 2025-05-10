@@ -1,0 +1,67 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    margin-bottom: 20px;
+}
+
+.titleInput {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.contentInput {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+    min-height: 100px;
+}
+
+
+.editButton {
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.removeButton {
+    padding: 0.5rem 1rem;
+    background-color: #DC3545;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.titlePost {
+    color: #000000;
+    margin-bottom: 0.5rem;
+}
+
+.contentPost {
+    word-break: break-word;
+    color: #000000;
+    margin-bottom: 1rem;
+}
+
+.timestamp {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 1rem;
+}
+
+.postCard {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}

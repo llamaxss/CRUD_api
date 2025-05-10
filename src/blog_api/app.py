@@ -1,71 +1,75 @@
-from flask import Flask, jsonify, Request, request, render_template, url_for, redirect
-from datetime import datetime
+from flask import Blueprint, jsonify, Request, request
 
-from src.blog_api.db.service import (
+from src.util.database_helper import database_session
+from src.db.models.blogs import BlogSchema
+from src.db.services.blog import (
     add_blog,
     get_all_blog_data,
     delete_post_data,
     edit_post_data,
     get_post_data_by_id,
 )
-from src.blog_api.db.models.blogs import BlogSchema
-from src.blog_api.db.base import Base, Engine, localsession
-
-Base.metadata.create_all(Engine)
-session = localsession()
-
-app = Flask(__name__)
 
 
-@app.get("/post")
-def get_post() -> Request:
+blog_api_bp = Blueprint("blog_api_bp", __name__, url_prefix="/api/blog")
+
+
+@blog_api_bp.route("/post", methods=["GET"])
+@database_session
+def get_post(db_session) -> Request:
+
     id = request.args.get("id")
-    post = get_post_data_by_id(session, id).to_dict()
+    post = get_post_data_by_id(db_session, id).to_dict()
     if post:
         res = jsonify(post)
         res.status_code = 200
     else:
-        res = jsonify({"message": "Post not found"})
+        res = jsonify({"msg": "Post not found"})
         res.status_code = 404
-    res.headers["Content-Type"] = "application/json"
 
     return res
 
 
-@app.get("/post/getall")
-def get_all_post() -> Request:
+@blog_api_bp.route("/posts", methods=["GET"])
+@database_session
+def get_all_post(db_session) -> Request:
 
-    post = [post.to_dict() for post in get_all_blog_data(session)]
+    post = [post.to_dict() for post in get_all_blog_data(db_session)]
     if post:
         res = jsonify(post)
         res.status_code = 200
     else:
-        res = jsonify({"message": "Post not found"})
+        res = jsonify({"msg": "Post not found"})
         res.status_code = 404
-    res.headers["Content-Type"] = "application/json"
 
     return res
 
 
-@app.post("/post")
-def add_post() -> Request:
+@blog_api_bp.route("/post", methods=["POST"])
+@database_session
+def add_post(db_session) -> Request:
+    data = request.get_json()
+    title = data.get("title")
+    content = data.get("content")
 
-    title = request.form.get("title")
-    content = request.form.get("content")
+    if not title or not content:
+        res = jsonify({"msg": "Title and content are required"})
+        res.status_code = 400
+        return res
 
-    if title and content:
-        blog = BlogSchema(
-            title=title,
-            content=content,
-        )
+    blog = BlogSchema(
+        title=title,
+        content=content,
+    )
 
-        jsonify(add_blog(session, blog).to_dict())
+    res = jsonify(add_blog(db_session, blog).to_dict())
+    res.status_code = 201
+    return res
 
-    return redirect(url_for("home"), 301)
 
-
-@app.put("/post")
-def edit_post() -> Request:
+@blog_api_bp.route("/post", methods=["PUT"])
+@database_session
+def edit_post(db_session) -> Request:
     data = request.get_json()
 
     id = data.get("id")
@@ -77,50 +81,35 @@ def edit_post() -> Request:
         content=content,
     )
 
-    post_data = edit_post_data(session, id, blog)
+    post_data = edit_post_data(db_session, id, blog)
     if post_data is None:
-        res = jsonify({"message": "Post not found"})
+        res = jsonify({"msg": "Post not found"})
         res.status_code = 404
     else:
         res = jsonify(post_data.to_dict())
         res.status_code = 200
 
-    res.headers["Content-Type"] = "application/json"
     return res
 
 
-@app.route("/post", methods=["DELETE", "GET"])
-def delete_post() -> Request:
+@blog_api_bp.route("/post", methods=["DELETE"])
+@database_session
+def delete_post(db_session) -> Request:
     id = request.args.get("id")
-    delete_post_data(session, id)
-    return jsonify({"message": "Post deleted successfully"})
 
-
-def time_format(post_data: dict[str, any]) -> str:
-    last_modified_dt_str = post_data["last_modified"]
-    created_at_dt_str = post_data["created_at"]
-
-    post_data["last_modified"] = last_modified_dt_str.strftime(
-        "%a, %d %b %Y %H:%M:%S GMT"
-    )
-    post_data["created_at"] = created_at_dt_str.strftime("%a, %d %b %Y %H:%M:%S GMT")
-    return post_data
-
-
-@app.route("/", methods=["GET"])
-def home():
-
-    posts = [time_format(post.to_dict()) for post in get_all_blog_data(session)]
-
-    return render_template("index.html", posts=posts)
+    try:
+        delete_post_data(db_session, id)
+        res = jsonify({"msg": "Post deleted successfully"})
+        res.status_code = 200
+    except Exception as e:
+        res = jsonify({"msg": "Post not found"})
+        res.status_code = 404
+    return res
 
 
 if __name__ == "__main__":
-    from src.blog_api.db.base import create_engine, sessionmaker
+    from flask import Flask
 
-    Engine = create_engine("sqlite:///demo.db")
-    Base.metadata.create_all(Engine)
-    localsession = sessionmaker(bind=Engine, autoflush=True)
-    session = localsession()
-    app.run(debug=True)
-    url_for("home", _method="GET")
+    app = Flask(__name__)
+    app.register_blueprint(blog_api_bp)
+    app.run(debug=True, port=5055)

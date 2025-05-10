@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-uri = ":memory:"
-Engine = create_engine(f"sqlite:///{uri}")
+uri = "sqlite:///memory.db"
+Engine = create_engine(uri)
 localsession = sessionmaker(bind=Engine, autoflush=True)
 
 class Base(DeclarativeBase):
     pass
+
+def create_database():
+    Base.metadata.create_all(Engine)

@@ -14,6 +14,7 @@ class BlogSchema:
     def __post_init__(self):
         self.last_modified = datetime.datetime.now()
 
+
 class BlogDb(Base):
     __tablename__ = "blog"
 
